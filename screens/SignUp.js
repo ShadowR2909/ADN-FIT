@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Image, StatusBar, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Image, StatusBar, ScrollView, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { auth } from '../src/config/firebaseConfig';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
@@ -16,14 +16,14 @@ export default function SignUp({ navigation }) {
   // Estados para la validación visual de la contraseña
   const [hasMinLength, setHasMinLength] = useState(false);
   const [hasNumber, setHasNumber] = useState(false);
-  const [hasLetter, setHasLetter] = useState(false);
+  const [hasLetter, setHasUppercase] = useState(false);
 
   const handlePasswordChange = (text) => {
     setPassword(text);
     // Actualizar los estados de validación en tiempo real
-    setHasMinLength(text.length > 10);
+    setHasMinLength(text.length > 6);
     setHasNumber(/[0-9]/.test(text));
-    setHasLetter(/[a-zA-Z]/.test(text));
+    setHasUppercase(/[A-Z]/.test(text));
   };
 
   const handleSignUp = async () => {
@@ -38,18 +38,18 @@ export default function SignUp({ navigation }) {
     }
 
     // Validar las nuevas condiciones de contraseña
-    if (password.length <= 10) {
-      Alert.alert("Contraseña Inválida", "La contraseña debe tener más de 10 caracteres.");
+    if (password.length <= 5) {
+      Alert.alert("Contraseña Inválida", "La contraseña debe tener más de 6 caracteres.");
       return;
     }
     if (!/[0-9]/.test(password)) {
       Alert.alert("Contraseña Inválida", "La contraseña debe contener al menos un número.");
       return;
     }
-    if (!/[a-zA-Z]/.test(password)) {
-      Alert.alert("Contraseña Inválida", "La contraseña debe contener al menos una letra.");
+    if (!/[A-Z]/.test(password)) {
+      Alert.alert("Contraseña Inválida", "La contraseña debe contener al menos una letra mayúscula.");
       return;
-    }
+      }
 
     try {
       await createUserWithEmailAndPassword(auth, email, password);
@@ -93,10 +93,18 @@ export default function SignUp({ navigation }) {
     );
   };
 
+  const isWeb = Platform.OS === "web";
+
+  const scrollContentStyle = isWeb
+  ? { flexgrow: 1, minHeight: '100%'}
+  : styles.scrollContent;
+
   return (
+   isWeb ? (
+    // WEB: solo View + ScrollView
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#0A0A0A" />
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+        {/* Formulario completo */}
         <View style={styles.header}>
           <Image source={require('../assets/logo-gym.png.png')} style={styles.logo} />
           <Text style={styles.appName}>ADN-FIT GYM</Text>
@@ -159,12 +167,11 @@ export default function SignUp({ navigation }) {
             </TouchableOpacity>
           </View>
 
-          {/* Bloque de validación visual */}
           <View style={styles.validationBox}>
             <Text style={styles.validationTitle}>La contraseña debe incluir:</Text>
             {renderValidation(hasMinLength, "Más de 6 caracteres")}
             {renderValidation(hasNumber, "Al menos un número")}
-            {renderValidation(hasLetter, "Al menos una letra")}
+            {renderValidation(hasLetter, "Al menos una letra mayúscula")}
           </View>
 
           <Text style={styles.label}>Confirmar Contraseña</Text>
@@ -188,12 +195,122 @@ export default function SignUp({ navigation }) {
           </TouchableOpacity>
 
           <TouchableOpacity onPress={() => navigation.navigate('Login')} style={styles.loginLink}>
-            <Text style={styles.loginText}>¿Ya tienes cuenta? <Text style={styles.loginTextBold}>Inicia sesión</Text></Text>
+            <Text style={styles.loginText}>
+              ¿Ya tienes cuenta? <Text style={styles.loginTextBold}>Inicia sesión</Text>
+            </Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
     </View>
-  );
+  ) : (
+    // MÓVIL: TouchableWithoutFeedback + KeyboardAvoidingView
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <KeyboardAvoidingView
+        style={{ flex: 1, backgroundColor: '#0A0A0A' }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <ScrollView contentContainerStyle={[styles.scrollContent, {backgroundColor: '#0a0a0a'}]} keyboardShouldPersistTaps="handled">
+          {/* Formulario completo */}
+          <View style={styles.header}>
+            <Image source={require('../assets/logo-gym.png.png')} style={styles.logo} />
+            <Text style={styles.appName}>ADN-FIT GYM</Text>
+          </View>
+
+          <View style={styles.card}>
+            <Text style={styles.title}>CREAR CUENTA</Text>
+
+            <Text style={styles.label}>Nombre</Text>
+            <View style={styles.inputContainer}>
+              <FontAwesome name="user" size={18} color="#888" style={styles.icon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Tu nombre"
+                placeholderTextColor="#888"
+                value={firstName}
+                onChangeText={setFirstName}
+              />
+            </View>
+
+            <Text style={styles.label}>Apellido</Text>
+            <View style={styles.inputContainer}>
+              <FontAwesome name="user" size={18} color="#888" style={styles.icon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Tu apellido"
+                placeholderTextColor="#888"
+                value={lastName}
+                onChangeText={setLastName}
+              />
+            </View>
+
+            <Text style={styles.label}>Correo Electrónico</Text>
+            <View style={styles.inputContainer}>
+              <FontAwesome name="envelope" size={18} color="#888" style={styles.icon} />
+              <TextInput
+                style={styles.input}
+                placeholder="ejemplo@email.com"
+                placeholderTextColor="#888"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+            </View>
+
+            <Text style={styles.label}>Contraseña</Text>
+            <View style={styles.inputContainer}>
+              <FontAwesome name="lock" size={18} color="#888" style={styles.icon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Ingresa tu contraseña"
+                placeholderTextColor="#888"
+                value={password}
+                onChangeText={handlePasswordChange}
+                secureTextEntry={!showPassword}
+              />
+              <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
+                <FontAwesome name={showPassword ? "eye-slash" : "eye"} size={18} color="#888" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.validationBox}>
+              <Text style={styles.validationTitle}>La contraseña debe incluir:</Text>
+              {renderValidation(hasMinLength, "Más de 6 caracteres")}
+              {renderValidation(hasNumber, "Al menos un número")}
+              {renderValidation(hasLetter, "Al menos una letra mayúscula")}
+            </View>
+
+            <Text style={styles.label}>Confirmar Contraseña</Text>
+            <View style={styles.inputContainer}>
+              <FontAwesome name="lock" size={18} color="#888" style={styles.icon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Confirma tu contraseña"
+                placeholderTextColor="#888"
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                secureTextEntry={!showConfirmPassword}
+              />
+              <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)} style={styles.eyeIcon}>
+                <FontAwesome name={showConfirmPassword ? "eye-slash" : "eye"} size={18} color="#888" />
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity style={styles.button} onPress={handleSignUp}>
+              <Text style={styles.buttonText}>REGISTRARSE</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={() => navigation.navigate('Login')} style={styles.loginLink}>
+              <Text style={styles.loginText}>
+                ¿Ya tienes cuenta? <Text style={styles.loginTextBold}>Inicia sesión</Text>
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </TouchableWithoutFeedback>
+  )
+);
 }
 
 const styles = StyleSheet.create({

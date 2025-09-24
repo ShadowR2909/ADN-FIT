@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Image, StatusBar } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Image, StatusBar, ScrollView, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../src/config/firebaseConfig'; // Asegúrate de que esta ruta sea correcta
+import { auth } from '../src/config/firebaseConfig';
 
 export default function Login({ navigation }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+
+  const isWeb = Platform.OS === 'web';
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -34,65 +36,132 @@ export default function Login({ navigation }) {
         case 'auth/network-request-failed':
           errorMessage = "Problema de conexión a internet. Verifica tu red.";
           break;
-        default:
-          errorMessage = "Error desconocido. Por favor, contacta a soporte.";
-          break;
       }
       Alert.alert("Error al Iniciar Sesión", errorMessage);
     }
   };
 
+  const scrollContentStyle = isWeb
+    ? { flexGrow: 1, minHeight: '100%', justifyContent: 'center',alignItems: 'center' }
+    : styles.scrollContent;
+
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={styles.header.backgroundColor} />
+    isWeb ? (
+      <View style={styles.container}>
+        <StatusBar barStyle="light-content" backgroundColor="#1C1C1C" />
+        <ScrollView contentContainerStyle={scrollContentStyle} keyboardShouldPersistTaps="handled">
+          <View style={{width: '100%', maxWirdth: 400, alignItems: 'center'}}>
+          </View>
+          <View style={styles.header}>
+            <Image source={require('../assets/logo-gym.png.png')} style={styles.logo} />
+            <Text style={styles.appName}>ADN-FIT GYM</Text>
+          </View>
 
-      <View style={styles.header}>
-        <Image source={require('../assets/logo-gym.png.png')} style={styles.logo} />
-        <Text style={styles.appName}>ADN-FIT GYM</Text>
+          <View style={styles.card}>
+            <Text style={styles.title}>INICIAR SESIÓN</Text>
+
+            <Text style={styles.label}>Correo Electrónico</Text>
+            <View style={styles.inputContainer}>
+              <FontAwesome name="envelope" size={18} color="#888" style={styles.icon} />
+              <TextInput
+                style={styles.input}
+                placeholder="ejemplo@email.com"
+                placeholderTextColor="#888"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+            </View>
+
+            <Text style={styles.label}>Contraseña</Text>
+            <View style={styles.inputContainer}>
+              <FontAwesome name="lock" size={18} color="#888" style={styles.icon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Ingresa tu contraseña"
+                placeholderTextColor="#888"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+              />
+              <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
+                <FontAwesome name={showPassword ? "eye-slash" : "eye"} size={18} color="#888" />
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity style={styles.button} onPress={handleLogin}>
+              <Text style={styles.buttonText}>INGRESAR</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={() => navigation.navigate('SignUp')} style={styles.loginLink}>
+              <Text style={styles.loginText}>
+                ¿No tienes cuenta? <Text style={styles.loginTextBold}>Regístrate aquí</Text>
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
       </View>
+    ) : (
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <KeyboardAvoidingView
+          style={{ flex: 1, backgroundColor: '#0A0A0A' }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
+          <StatusBar barStyle="light-content" backgroundColor="#1C1C1C" />
+          <ScrollView contentContainerStyle={scrollContentStyle} keyboardShouldPersistTaps="handled">
+            <View style={styles.header}>
+              <Image source={require('../assets/logo-gym.png.png')} style={styles.logo} />
+              <Text style={styles.appName}>ADN-FIT GYM</Text>
+            </View>
 
-      <View style={styles.card}>
-        <Text style={styles.title}>INICIAR SESIÓN</Text>
+            <View style={styles.card}>
+              <Text style={styles.title}>INICIAR SESIÓN</Text>
 
-        <Text style={styles.label}>Correo Electrónico</Text>
-        <View style={styles.inputContainer}>
-          <FontAwesome name="envelope" size={18} color="#888" style={styles.icon} />
-          <TextInput
-            style={styles.input}
-            placeholder="ejemplo@email.com"
-            placeholderTextColor="#888"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
-        </View>
+              <Text style={styles.label}>Correo Electrónico</Text>
+              <View style={styles.inputContainer}>
+                <FontAwesome name="envelope" size={18} color="#888" style={styles.icon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="ejemplo@email.com"
+                  placeholderTextColor="#888"
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+              </View>
 
-        <Text style={styles.label}>Contraseña</Text>
-        <View style={styles.inputContainer}>
-          <FontAwesome name="lock" size={18} color="#888" style={styles.icon} />
-          <TextInput
-            style={styles.input}
-            placeholder="Ingresa tu contraseña"
-            placeholderTextColor="#888"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry={!showPassword}
-          />
-          <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
-            <FontAwesome name={showPassword ? "eye-slash" : "eye"} size={18} color="#888" />
-          </TouchableOpacity>
-        </View>
+              <Text style={styles.label}>Contraseña</Text>
+              <View style={styles.inputContainer}>
+                <FontAwesome name="lock" size={18} color="#888" style={styles.icon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Ingresa tu contraseña"
+                  placeholderTextColor="#888"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={!showPassword}
+                />
+                <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
+                  <FontAwesome name={showPassword ? "eye-slash" : "eye"} size={18} color="#888" />
+                </TouchableOpacity>
+              </View>
 
-        <TouchableOpacity style={styles.button} onPress={handleLogin}>
-          <Text style={styles.buttonText}>INGRESAR</Text>
-        </TouchableOpacity>
+              <TouchableOpacity style={styles.button} onPress={handleLogin}>
+                <Text style={styles.buttonText}>INGRESAR</Text>
+              </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => navigation.navigate('SignUp')} style={styles.signUpLink}>
-          <Text style={styles.signUpText}>¿No tienes cuenta? <Text style={styles.signUpTextBold}>Regístrate aquí</Text></Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+              <TouchableOpacity onPress={() => navigation.navigate('SignUp')} style={styles.loginLink}>
+                <Text style={styles.loginText}>
+                  ¿No tienes cuenta? <Text style={styles.loginTextBold}>Regístrate aquí</Text>
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </TouchableWithoutFeedback>
+    )
   );
 }
 
@@ -100,6 +169,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#0A0A0A',
+  },
+  scrollContent: {
+    flexGrow: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -146,13 +218,13 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 5,
     elevation: 8,
-    marginTop: 180,
+    marginTop: 200,
   },
   title: {
     fontSize: 26,
     fontWeight: 'bold',
     color: '#30e333ff',
-    marginBottom: 30,
+    marginBottom: 20,
     textTransform: 'uppercase',
   },
   label: {
@@ -161,7 +233,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#E0E0E0',
     marginBottom: 8,
-    marginTop: 15,
+    marginTop: 10,
   },
   inputContainer: {
     flexDirection: 'row',
@@ -169,7 +241,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#2C2C2C',
     borderRadius: 10,
     paddingHorizontal: 15,
-    marginBottom: 20,
+    marginBottom: 15,
     width: '100%',
     borderWidth: 1,
     borderColor: '#4A4A4A',
@@ -181,7 +253,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 50,
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: 14,
   },
   eyeIcon: {
     padding: 8,
@@ -191,9 +263,9 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     paddingHorizontal: 40,
     borderRadius: 10,
-    marginTop: 30,
-    width: '75%', // Ajuste del ancho del botón a un 85% del contenedor
-    alignSelf: 'center', // Para asegurar que el botón esté centrado en su contenedor
+    marginTop: 20,
+    width: '85%',
+    alignSelf: 'center',
     alignItems: 'center',
     shadowColor: '#8BC34A',
     shadowOffset: { width: 0, height: 5 },
@@ -207,14 +279,14 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textTransform: 'uppercase',
   },
-  signUpLink: {
-    marginTop: 30,
+  loginLink: {
+    marginTop: 20,
   },
-  signUpText: {
+  loginText: {
     color: '#B0B0B0',
     fontSize: 15,
   },
-  signUpTextBold: {
+  loginTextBold: {
     color: '#30e333ff',
     fontWeight: 'bold',
   },
