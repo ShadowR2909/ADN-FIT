@@ -1,25 +1,44 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Image, StatusBar, ScrollView, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Image, StatusBar, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../src/config/firebaseConfig';
+import CustomAlertModal from '../components/CostomAlertModal';
 
 export default function Login({ navigation }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-  const isWeb = Platform.OS === 'web';
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertTitle, setAlertTitle] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
+  const [alertType, setAlertType] = useState('info');
+
+  const showCustomAlert = (title, message, type = 'info') => {
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setAlertType(type);
+    setAlertVisible(true);
+  };
+  const closeCustomAlert = () => {
+    setAlertVisible(false);
+  };
+
+  const handleNameChange = (text, setter) => {
+  // Solo letras (mayúsculas, minúsculas) y espacios
+  const filteredText = text.replace(/[^a-zA-Z\s]/g, '');
+  setter(filteredText);
+  };
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert("Error de Inicio de Sesión", "Por favor ingresa tu correo y contraseña.");
+      showCustomAlert("Error", "Por favor ingresa tu correo y contraseña.");
       return;
     }
-
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      Alert.alert("¡Bienvenido a ADN-FIT GYM!", "Has iniciado sesión exitosamente.");
+      showCustomAlert("¡Bienvenido a ADN-FIT GYM!", "Has iniciado sesión exitosamente.");
       navigation.reset({ index: 0, routes: [{ name: 'Home' }] });
     } catch (error) {
       let errorMessage = "Hubo un problema al iniciar sesión. Intenta de nuevo.";
@@ -36,258 +55,193 @@ export default function Login({ navigation }) {
         case 'auth/network-request-failed':
           errorMessage = "Problema de conexión a internet. Verifica tu red.";
           break;
+        default:
+          errorMessage = "Error desconocido. Por favor, contacta a soporte.";
+          break;
       }
-      Alert.alert("Error al Iniciar Sesión", errorMessage);
+      showCustomAlert("Error al Iniciar Sesión", errorMessage);
     }
   };
 
-  const scrollContentStyle = isWeb
-    ? { flexGrow: 1, minHeight: '100%', justifyContent: 'center',alignItems: 'center' }
-    : styles.scrollContent;
-
   return (
-    isWeb ? (
-      <View style={styles.container}>
-        <StatusBar barStyle="light-content" backgroundColor="#1C1C1C" />
-        <ScrollView contentContainerStyle={scrollContentStyle} keyboardShouldPersistTaps="handled">
-          <View style={{width: '100%', maxWirdth: 400, alignItems: 'center'}}>
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#f4f2f2ff" />
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+      >
+      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+        <View style={styles.card}>
+          <Image source={require('../assets/logo-gym.png.png')} style={styles.logo} />
+          <Text style={styles.title}>INICIAR SESIÓN</Text>
+
+          <Text style={styles.label}>Correo Electrónico</Text>
+          <View style={styles.inputContainer}>
+            <FontAwesome name="envelope" size={18} color="#19d44c" style={styles.icon} />
+            <TextInput
+              style={styles.input}
+              placeholder="ejemplo@email.com"
+              placeholderTextColor="#888"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
           </View>
-          <View style={styles.header}>
-            <Image source={require('../assets/logo-gym.png.png')} style={styles.logo} />
-            <Text style={styles.appName}>ADN-FIT GYM</Text>
-          </View>
 
-          <View style={styles.card}>
-            <Text style={styles.title}>INICIAR SESIÓN</Text>
-
-            <Text style={styles.label}>Correo Electrónico</Text>
-            <View style={styles.inputContainer}>
-              <FontAwesome name="envelope" size={18} color="#888" style={styles.icon} />
-              <TextInput
-                style={styles.input}
-                placeholder="ejemplo@email.com"
-                placeholderTextColor="#888"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-            </View>
-
-            <Text style={styles.label}>Contraseña</Text>
-            <View style={styles.inputContainer}>
-              <FontAwesome name="lock" size={18} color="#888" style={styles.icon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Ingresa tu contraseña"
-                placeholderTextColor="#888"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!showPassword}
-              />
-              <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
-                <FontAwesome name={showPassword ? "eye-slash" : "eye"} size={18} color="#888" />
-              </TouchableOpacity>
-            </View>
-
-            <TouchableOpacity style={styles.button} onPress={handleLogin}>
-              <Text style={styles.buttonText}>INGRESAR</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity onPress={() => navigation.navigate('SignUp')} style={styles.loginLink}>
-              <Text style={styles.loginText}>
-                ¿No tienes cuenta? <Text style={styles.loginTextBold}>Regístrate aquí</Text>
-              </Text>
+          <Text style={styles.label}>Contraseña</Text>
+          <View style={styles.inputContainer}>
+            <FontAwesome name="lock" size={18} color="#19d44c" style={styles.icon} />
+            <TextInput
+              style={styles.input}
+              placeholder="Ingresa tu contraseña"
+              placeholderTextColor="#888"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
+              autoCapitalize="none"
+            />
+            <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
+              <FontAwesome name={showPassword ? "eye-slash" : "eye"} size={18} color="#888" />
             </TouchableOpacity>
           </View>
-        </ScrollView>
-      </View>
-    ) : (
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <KeyboardAvoidingView
-          style={{ flex: 1, backgroundColor: '#0A0A0A' }}
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-        >
-          <StatusBar barStyle="light-content" backgroundColor="#1C1C1C" />
-          <ScrollView contentContainerStyle={scrollContentStyle} keyboardShouldPersistTaps="handled">
-            <View style={styles.header}>
-              <Image source={require('../assets/logo-gym.png.png')} style={styles.logo} />
-              <Text style={styles.appName}>ADN-FIT GYM</Text>
-            </View>
 
-            <View style={styles.card}>
-              <Text style={styles.title}>INICIAR SESIÓN</Text>
+          {/* Mover texto abajo del input de contraseña */}
+          <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
+            <Text style={styles.forgotText}>¿Olvidaste tu contraseña?</Text>
+          </TouchableOpacity>
 
-              <Text style={styles.label}>Correo Electrónico</Text>
-              <View style={styles.inputContainer}>
-                <FontAwesome name="envelope" size={18} color="#888" style={styles.icon} />
-                <TextInput
-                  style={styles.input}
-                  placeholder="ejemplo@email.com"
-                  placeholderTextColor="#888"
-                  value={email}
-                  onChangeText={setEmail}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                />
-              </View>
-
-              <Text style={styles.label}>Contraseña</Text>
-              <View style={styles.inputContainer}>
-                <FontAwesome name="lock" size={18} color="#888" style={styles.icon} />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Ingresa tu contraseña"
-                  placeholderTextColor="#888"
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry={!showPassword}
-                />
-                <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
-                  <FontAwesome name={showPassword ? "eye-slash" : "eye"} size={18} color="#888" />
-                </TouchableOpacity>
-              </View>
-
-              <TouchableOpacity style={styles.button} onPress={handleLogin}>
-                <Text style={styles.buttonText}>INGRESAR</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity onPress={() => navigation.navigate('SignUp')} style={styles.loginLink}>
-                <Text style={styles.loginText}>
-                  ¿No tienes cuenta? <Text style={styles.loginTextBold}>Regístrate aquí</Text>
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </ScrollView>
-        </KeyboardAvoidingView>
-      </TouchableWithoutFeedback>
-    )
+          <TouchableOpacity style={styles.button} onPress={handleLogin}>
+            <Text style={styles.buttonText}>INGRESAR</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate('SignUp')} style={styles.signUpLink}>
+            <Text style={styles.signUpText}>
+              ¿No tenes cuenta? <Text style={styles.signUpTextBold}>Regístrate</Text>
+            </Text>
+          </TouchableOpacity>
+          <CustomAlertModal
+            visible={alertVisible}
+            title={alertTitle}
+            message={alertMessage}
+            onClose={closeCustomAlert}
+            type={alertType}
+          />
+        </View>
+      </ScrollView>
+      </KeyboardAvoidingView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0A0A0A',
+    backgroundColor: '#f4f2f2ff',
   },
   scrollContent: {
     flexGrow: 1,
-    alignItems: 'center',
     justifyContent: 'center',
-  },
-  header: {
-    position: 'absolute',
-    top: 0,
-    width: '100%',
-    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 40,
-    backgroundColor: '#1C1C1C',
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  logo: {
-    width: 60,
-    height: 60,
-    resizeMode: 'contain',
-    marginRight: 10,
-  },
-  appName: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#30e333ff',
-    textShadowColor: 'rgba(0, 0, 0, 0.75)',
-    textShadowOffset: { width: -1, height: 1 },
-    textShadowRadius: 10,
+    paddingVertical: 24,
   },
   card: {
-    width: '90%',
-    maxWidth: 400,
-    backgroundColor: '#1A1A1A',
-    borderRadius: 20,
-    padding: 30,
+    width: 340,
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 24,
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 8,
-    marginTop: 200,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
   },
   title: {
-    fontSize: 26,
+    fontSize: 22,
     fontWeight: 'bold',
-    color: '#30e333ff',
-    marginBottom: 20,
+    color: '#19d44c',
+    marginBottom: 18,
+    textAlign: 'center',
     textTransform: 'uppercase',
+  },
+  logo: {
+    width: 180,
+    height: 150,
+    resizeMode: 'contain',
+    marginBottom: 18,
+    marginTop: 4,
   },
   label: {
     alignSelf: 'flex-start',
     fontSize: 15,
     fontWeight: '600',
-    color: '#E0E0E0',
-    marginBottom: 8,
+    color: '#222',
+    marginBottom: 6,
     marginTop: 10,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#2C2C2C',
-    borderRadius: 10,
-    paddingHorizontal: 15,
-    marginBottom: 15,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: '#19d44c',
+    paddingHorizontal: 12,
+    marginBottom: 8,
     width: '100%',
-    borderWidth: 1,
-    borderColor: '#4A4A4A',
   },
   icon: {
-    marginRight: 12,
+    marginRight: 8,
   },
   input: {
     flex: 1,
-    height: 50,
-    color: '#FFFFFF',
-    fontSize: 14,
+    height: 44,
+    color: '#3e3737ff',
+    fontSize: 15,
+    backgroundColor: '#fff',
   },
   eyeIcon: {
     padding: 8,
   },
   button: {
-    backgroundColor: '#8BC34A',
-    paddingVertical: 15,
-    paddingHorizontal: 40,
-    borderRadius: 10,
-    marginTop: 20,
-    width: '85%',
-    alignSelf: 'center',
+    backgroundColor: '#1afa56ff',
+    borderRadius: 8,
+    width: '70%',
+    paddingVertical: 13,
     alignItems: 'center',
-    shadowColor: '#8BC34A',
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 10,
+    marginTop: 10,
+    marginBottom: 10,
+    shadowColor: '#19d44c',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 2,
   },
   buttonText: {
-    color: '#0A0A0A',
-    fontSize: 18,
+    color: '#090909ff',
     fontWeight: 'bold',
+    fontSize: 16,
     textTransform: 'uppercase',
   },
-  loginLink: {
-    marginTop: 20,
+  forgotText: {
+    color: '#08f7ffff',
+    fontSize: 14,
+    marginTop: 2,
+    marginBottom: 10,
+    textAlign: 'center',
+    textDecorationLine: 'underline',
   },
-  loginText: {
-    color: '#B0B0B0',
-    fontSize: 15,
+  signUpLink: {
+    marginTop: 8,
   },
-  loginTextBold: {
-    color: '#30e333ff',
+  signUpText: {
+    color: '#888888ff',
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  signUpTextBold: {
+    color: '#19d44c',
     fontWeight: 'bold',
   },
 });
