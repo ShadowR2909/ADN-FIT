@@ -1,17 +1,6 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Image,
-  StatusBar,
-  ScrollView,
-  ActivityIndicator,
-} from 'react-native';
-import { FontAwesome5, MaterialIcons, MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
-import { signOut } from 'firebase/auth';
-import { auth } from '../src/config/firebaseConfig';
+import {View,Text,TouchableOpacity,StyleSheet,Image,StatusBar,ScrollView,ActivityIndicator,FlatList,Dimensions,} from 'react-native';
+import {FontAwesome5,MaterialIcons,MaterialCommunityIcons,Ionicons,} from '@expo/vector-icons';
 import { useAuth } from '../src/hooks/useAuth';
 import CustomAlertModal from '../components/CostomAlertModal';
 import { COLORS, SPACING } from '../src/theme';
@@ -33,20 +22,6 @@ export default function Home({ navigation }) {
 
   const closeCustomAlert = () => setAlertVisible(false);
 
-  const handleLogOut = async () => {
-    try {
-      await signOut(auth);
-      showCustomAlert('Sesión cerrada correctamente.', '', 'success');
-      setTimeout(
-        () => navigation.reset({ index: 0, routes: [{ name: 'Login' }] }),
-        600
-      );
-    } catch (error) {
-      showCustomAlert('No se pudo cerrar la sesión. Intenta de nuevo.', '', 'error');
-      console.log(error);
-    }
-  };
-
   if (loading) {
     return (
       <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
@@ -57,28 +32,60 @@ export default function Home({ navigation }) {
 
   const userName = user?.displayName ?? user?.email?.split('@')[0] ?? '';
 
+  const carouselData = [
+    {
+      title: 'Bienvenidos',
+      content: 'Gracias por formar parte de nuestra comunidad fitness.',
+    },
+    {
+      title: 'Misión',
+      content: 'Fomentar el bienestar físico y mental de nuestros socios.',
+    },
+    {
+      title: 'Visión',
+      content: 'Ser el gimnasio líder en innovación y experiencia personalizada.',
+    },
+  ];
+
+  const renderCarouselItem = ({ item }) => (
+    <View style={styles.carouselSlide}>
+      <Text style={styles.carouselTitle}>{item.title}</Text>
+      <Text style={styles.carouselText}>{item.content}</Text>
+    </View>
+  );
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.bg} />
 
-      {/* Header con Bienvenido + logo centrado + Cerrar a la derecha */}
+      {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerText}>{userName ? `Bienvenido ${userName}` : 'Bienvenido'}</Text>
+        <TouchableOpacity onPress={() => navigation.openDrawer()}>
+          <Ionicons name="menu" size={28} color="#1cc741ff" />
+        </TouchableOpacity>
 
-        {/* Logo centrado */}
+        <Text style={styles.headerText}>
+          {userName ? `Bienvenido ${userName}` : 'Bienvenido'}
+        </Text>
+
         <TouchableOpacity activeOpacity={0.8}>
           <Image source={require('../assets/logo-gym.png')} style={styles.avatarCenter} />
         </TouchableOpacity>
-
-        {/* Cerrar sesión pegado a la derecha */}
-        <TouchableOpacity style={styles.logoutBtn} onPress={handleLogOut}>
-          <Ionicons name="log-out-outline" size={20} color={COLORS.primary} />
-          <Text style={styles.logoutTxt}>Cerrar sesión</Text>
-        </TouchableOpacity>
       </View>
 
+      {/* Carrusel horizontal */}
+      <FlatList
+        data={carouselData}
+        renderItem={renderCarouselItem}
+        keyExtractor={(item, index) => index.toString()}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        style={{ marginBottom: 20 }}
+      />
+
+      {/* Contenido principal */}
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Quick access */}
         <View style={styles.quickAccessRow}>
           <TouchableOpacity activeOpacity={0.85} style={styles.quickCard}>
             <FontAwesome5 name="user-plus" size={32} color={COLORS.primary} />
@@ -107,7 +114,6 @@ export default function Home({ navigation }) {
           </TouchableOpacity>
         </View>
 
-        {/* Gráfico */}
         <View style={styles.statsCard}>
           <View style={styles.statsHeader}>
             <Text style={styles.statsTitle}>Estadística</Text>
@@ -157,25 +163,32 @@ export default function Home({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.bg },
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.bg,
+    marginTop:55,
+  },
 
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: SPACING.horizontal,
-    paddingTop: 40,
-    paddingBottom: 10,
+    paddingTop: 10, // +10 para compensar status bar
+    paddingBottom: 16, // +6 para dar más aire visual
     backgroundColor: COLORS.card,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
   },
+
   headerText: {
     fontSize: 18,
     fontWeight: 'bold',
     color: COLORS.text,
-    flex: 1, // empuja el resto a la derecha
+    flex: 1,
+    marginLeft: 8,
   },
+
   avatarCenter: {
     width: 36,
     height: 36,
@@ -184,29 +197,20 @@ const styles = StyleSheet.create({
     borderColor: COLORS.primary,
     backgroundColor: '#fff',
   },
-  logoutBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginLeft: 8,
-  },
-  logoutTxt: {
-    fontSize: 12,
-    marginLeft: 4,
-    color: COLORS.primary,
-    fontWeight: 'bold',
-  },
 
   scrollContent: {
     paddingVertical: SPACING.vertical,
-    paddingBottom: 40,
+    paddingBottom: 60, // +20 para evitar solapamiento con elementos inferiores
   },
+
   quickAccessRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    width: 340,
-    marginBottom: 14,
+    width: '90%',
+    marginBottom: 20, // +6 para mayor separación entre filas
     alignSelf: 'center',
   },
+
   quickCard: {
     flex: 1,
     backgroundColor: COLORS.card,
@@ -216,12 +220,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 1,
+    shadowOpacity: 0.08, // +0.02 para mayor profundidad
+    shadowRadius: 8,     // +2 para suavizar el borde
+    elevation: 2,        // +1 para mejorar en Android
     borderWidth: 1,
     borderColor: COLORS.border,
   },
+
   quickTitle: {
     fontSize: 15,
     fontWeight: 'bold',
@@ -229,95 +234,138 @@ const styles = StyleSheet.create({
     marginTop: 10,
     textAlign: 'center',
   },
+
   quickDesc: {
     fontSize: 13,
     color: COLORS.muted,
     marginTop: 2,
     textAlign: 'center',
   },
+
   statsCard: {
-    width: 340,
+    width: '90%',
     alignSelf: 'center',
     backgroundColor: COLORS.card,
     borderRadius: 12,
     padding: 18,
-    marginTop: 10,
-    marginBottom: 18,
+    marginTop: 20,       // +10 para separar de los botones
+    marginBottom: 30,    // +12 para evitar que quede pegado al final
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 1,
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
     borderWidth: 1,
     borderColor: COLORS.border,
   },
+
   statsHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 12, // +4 para separar del gráfico
   },
+
   statsTitle: {
     fontSize: 16,
     fontWeight: 'bold',
     color: COLORS.text,
   },
+
   statsFilter: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: COLORS.bg,
     borderRadius: 12,
     paddingHorizontal: 10,
-    paddingVertical: 3,
+    paddingVertical: 4,
   },
+
   statsFilterText: {
     color: COLORS.muted,
     fontSize: 13,
     marginRight: 2,
   },
+
   statsLegend: {
     flexDirection: 'row',
-    marginBottom: 10,
+    marginBottom: 12,
   },
+
   legendItem: {
     flexDirection: 'row',
     alignItems: 'center',
     marginRight: 18,
   },
+
   legendDot: {
     width: 10,
     height: 10,
     borderRadius: 5,
     marginRight: 5,
   },
+
   legendText: {
     fontSize: 13,
     color: COLORS.muted,
   },
+
   barChart: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    height: 70,
-    marginBottom: 6,
-    marginTop: 1,
+    height: 80, // +10 para mejorar proporción visual
+    marginBottom: 10,
+    marginTop: 4,
     justifyContent: 'center',
   },
+
   bar: {
-    width: 19,
-    marginHorizontal: 4,
+    width: 20,
+    marginHorizontal: 5,
     borderRadius: 4,
   },
+
   barLabels: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '60%',
     alignSelf: 'center',
-    marginTop: 2,
+    marginTop: 4,
   },
+
   barLabel: {
     fontSize: 13,
     color: COLORS.muted,
     width: 40,
     textAlign: 'center',
+  },
+
+  carouselSlide: {
+    width: Dimensions.get('window').width,
+    paddingHorizontal: 20,
+    paddingVertical: 30,
+    backgroundColor: COLORS.card,
+    borderBottomWidth: 1,
+    borderColor: COLORS.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+    marginTop: 20,
+    marginHorizontal: 10,
+  },
+
+  carouselTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#23cc50ff',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+
+  carouselText: {
+    fontSize: 14,
+    color: COLORS.text,
+    textAlign: 'center',
+    paddingHorizontal: 10,
   },
 });
