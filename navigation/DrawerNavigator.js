@@ -2,6 +2,7 @@ import React from 'react';
 import {createDrawerNavigator,DrawerContentScrollView,DrawerItemList 
 } from '@react-navigation/drawer';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { COLORS } from '../src/theme';
 import TabNavigator from './TabNavegator';
 import PerfilScreen from '../screens/PerfilScreen';
 import AccesoriosScreen from '../screens/AccesoriosScreen';
@@ -9,6 +10,9 @@ import { View, Text, ImageBackground, Image, StyleSheet, TouchableOpacity, Modal
 import CustomAlertModal from '../components/CostomAlertModal';
 import { auth } from '../src/config/firebaseConfig';
 import { signOut } from 'firebase/auth';
+import SociosScreen from '../screens/SociosScreen';
+import TurnosScreen from '../screens/TurnosScreen';
+import FilosofiaScreen from '../screens/FilosofiaScreen';
 
 const Drawer = createDrawerNavigator();
 
@@ -57,6 +61,13 @@ function CustomDrawerContent(props) {
           <View style={{ marginLeft: 12 }}>
             <Text style={styles.name}>{user?.displayName || 'Bienvenido'}</Text>
             <Text style={styles.email}>{user?.email || ''}</Text>
+          </View>
+          <View style={styles.header}>
+            <TouchableOpacity onPress={() => navigation.goBack()}>
+              <Ionicons name="arrow-back" size={24} color={COLORS.text} />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Socios</Text>
+            <View style={{ width: 24 }} />
           </View>
         </View>
       </ImageBackground>
@@ -126,13 +137,32 @@ export default function DrawerNavigator() {
           ),
         }}
       />
+     <Drawer.Screen
+        name="Socios"
+        component={SociosScreen}
+        options={{
+          drawerIcon: ({ color }) => <Ionicons name="people-outline" size={22} color={color} />,
+        }}
+      />
+      <Drawer.Screen
+        name="Turnos"
+        component={TurnosScreen}
+        options={{
+          drawerIcon: ({ color }) => <Ionicons name="calendar-outline" size={22} color={color} />,
+        }}
+      />
+      <Drawer.Screen
+        name="Filosofia"
+        component={FilosofiaScreen}
+        options={{
+          drawerIcon: ({ color }) => <Ionicons name="heart-outline" size={22} color={color} />,
+        }}
+      />
       <Drawer.Screen
         name="Accesorios"
         component={AccesoriosScreen}
         options={{
-          drawerIcon: ({ color }) => (
-            <MaterialCommunityIcons name="dumbbell" size={20} color={color} />
-          ),
+          drawerIcon: ({ color }) => <Ionicons name="barbell-outline" size={22} color={color} />,
         }}
       />
     </Drawer.Navigator>

@@ -1,6 +1,17 @@
-import React from 'react';
-import {View,Text,TouchableOpacity,StyleSheet,Image,StatusBar,ScrollView,ActivityIndicator,FlatList,Dimensions,} from 'react-native';
-import {FontAwesome5,MaterialIcons,MaterialCommunityIcons,Ionicons,} from '@expo/vector-icons';
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Image,
+  StatusBar,
+  ScrollView,
+  ActivityIndicator,
+  FlatList,
+  Dimensions,
+} from 'react-native';
+import { FontAwesome5, MaterialIcons, MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../src/hooks/useAuth';
 import CustomAlertModal from '../components/CostomAlertModal';
 import { COLORS, SPACING } from '../src/theme';
@@ -19,7 +30,6 @@ export default function Home({ navigation }) {
     setAlertType(type);
     setAlertVisible(true);
   };
-
   const closeCustomAlert = () => setAlertVisible(false);
 
   if (loading) {
@@ -33,18 +43,9 @@ export default function Home({ navigation }) {
   const userName = user?.displayName ?? user?.email?.split('@')[0] ?? '';
 
   const carouselData = [
-    {
-      title: 'Bienvenidos',
-      content: 'Gracias por formar parte de nuestra comunidad fitness.',
-    },
-    {
-      title: 'Misión',
-      content: 'Fomentar el bienestar físico y mental de nuestros socios.',
-    },
-    {
-      title: 'Visión',
-      content: 'Ser el gimnasio líder en innovación y experiencia personalizada.',
-    },
+    { title: 'Bienvenidos', content: 'Gracias por formar parte de nuestra comunidad fitness.' },
+    { title: 'Misión', content: 'Fomentar el bienestar físico y mental de nuestros socios.' },
+    { title: 'Visión', content: 'Ser el gimnasio líder en innovación y experiencia personalizada.' },
   ];
 
   const renderCarouselItem = ({ item }) => (
@@ -86,14 +87,16 @@ export default function Home({ navigation }) {
 
       {/* Contenido principal */}
       <ScrollView contentContainerStyle={styles.scrollContent}>
+        {/* Quick access con navegación */}
+
         <View style={styles.quickAccessRow}>
-          <TouchableOpacity activeOpacity={0.85} style={styles.quickCard}>
+          <TouchableOpacity activeOpacity={0.85} style={styles.quickCard} onPress={() => navigation.navigate('Socios')}>
             <FontAwesome5 name="user-plus" size={32} color={COLORS.primary} />
             <Text style={styles.quickTitle}>Socios</Text>
             <Text style={styles.quickDesc}>Gestión de socios</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity activeOpacity={0.85} style={styles.quickCard}>
+          <TouchableOpacity activeOpacity={0.85} style={styles.quickCard} onPress={() => navigation.navigate('Turnos')}>
             <MaterialIcons name="event-available" size={32} color={COLORS.primary} />
             <Text style={styles.quickTitle}>Agregar un Turno</Text>
             <Text style={styles.quickDesc}>Asignación de clases</Text>
@@ -101,19 +104,20 @@ export default function Home({ navigation }) {
         </View>
 
         <View style={styles.quickAccessRow}>
-          <TouchableOpacity activeOpacity={0.85} style={styles.quickCard}>
+          <TouchableOpacity activeOpacity={0.85} style={styles.quickCard} onPress={() => navigation.navigate('Filosofia')}>
             <MaterialCommunityIcons name="emoticon-happy-outline" size={32} color={COLORS.primary} />
             <Text style={styles.quickTitle}>Nuestra Filosofía</Text>
             <Text style={styles.quickDesc}>Misión y visión</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity activeOpacity={0.85} style={styles.quickCard}>
+          <TouchableOpacity activeOpacity={0.85} style={styles.quickCard} onPress={() => navigation.navigate('Accesorios')}>
             <MaterialCommunityIcons name="dumbbell" size={32} color={COLORS.primary} />
             <Text style={styles.quickTitle}>Gestionar Accesorios</Text>
             <Text style={styles.quickDesc}>Inventario de equipos</Text>
           </TouchableOpacity>
         </View>
 
+        {/* Estadística */}
         <View style={styles.statsCard}>
           <View style={styles.statsHeader}>
             <Text style={styles.statsTitle}>Estadística</Text>
@@ -166,7 +170,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.bg,
-    marginTop:55,
+    marginTop: 55,
   },
 
   header: {
@@ -174,8 +178,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: SPACING.horizontal,
-    paddingTop: 10, // +10 para compensar status bar
-    paddingBottom: 16, // +6 para dar más aire visual
+    paddingTop: 10,
+    paddingBottom: 16,
     backgroundColor: COLORS.card,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
@@ -200,14 +204,14 @@ const styles = StyleSheet.create({
 
   scrollContent: {
     paddingVertical: SPACING.vertical,
-    paddingBottom: 60, // +20 para evitar solapamiento con elementos inferiores
+    paddingBottom: 60,
   },
 
   quickAccessRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '90%',
-    marginBottom: 20, // +6 para mayor separación entre filas
+    marginBottom: 20,
     alignSelf: 'center',
   },
 
@@ -220,9 +224,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08, // +0.02 para mayor profundidad
-    shadowRadius: 8,     // +2 para suavizar el borde
-    elevation: 2,        // +1 para mejorar en Android
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
     borderWidth: 1,
     borderColor: COLORS.border,
   },
@@ -248,8 +252,8 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.card,
     borderRadius: 12,
     padding: 18,
-    marginTop: 20,       // +10 para separar de los botones
-    marginBottom: 30,    // +12 para evitar que quede pegado al final
+    marginTop: 20,
+    marginBottom: 30,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
@@ -263,7 +267,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12, // +4 para separar del gráfico
+    marginBottom: 12,
   },
 
   statsTitle: {
@@ -313,7 +317,7 @@ const styles = StyleSheet.create({
   barChart: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    height: 80, // +10 para mejorar proporción visual
+    height: 80,
     marginBottom: 10,
     marginTop: 4,
     justifyContent: 'center',
